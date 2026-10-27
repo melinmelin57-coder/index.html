@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HK Clinic Ops (Cap. 633)</title>
+<style>
+  :root{--pri:#0b6e4f;--pri2:#084c36;--bg:#f4f7f6;--card:#fff;--danger:#c0392b;--warn:#e67e22;--ok:#27ae60;--line:#dbe4e0;--txt:#1c2b28}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--txt)}
+  header{background:var(--pri);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+  header h1{font-size:18px;margin:0}
+  .userbox{display:flex;align-items:center;gap:10px;font-size:14px}
+  button{background:var(--pri);color:#fff;border:0;padding:9px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+  button:hover{background:var(--pri2)}
+  button.ghost{background:#fff;color:var(--pri);border:1px solid var(--pri)}
+  button.danger{background:var(--danger)}
+  button.small{padding:5px 10px;font-size:12px}
+  .layout{display:flex;min-height:calc(100vh - 56px)}
+  nav{width:210px;background:#fff;border-right:1px solid var(--line);padding:12px 8px;flex-shrink:0}
+  nav a{display:block;padding:10px 12px;border-radius:8px;color:var(--txt);text-decoration:none;margin-bottom:4px;font-size:14px;cursor:pointer}
+  nav a.active,nav a:hover{background:#e8f3ef;color:var(--pri);font-weight:600}
+  main{flex:1;padding:20px;overflow:auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .card h2{margin:0 0 12px;font-size:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  label{display:block;font-size:13px;margin:8px 0 4px;font-weight:600}
+  input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+  th{background:#f0f5f3;font-weight:600}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .pill.ok{background:#e3f7ec;color:var(--ok)}
+  .pill.warn{background:#fdf0e0;color:var(--warn)}
+  .pill.bad{background:#fbe7e4;color:var(--danger)}
+  .pill.info{background:#e6f0fb;color:#1f5fa8}
+  .hide{display:none!important}
+  .login-wrap{max-width:400px;margin:8vh auto;background:#fff;padding:28px;border-radius:14px;border:1px solid var(--line);box-shadow:0 8px 30px rgba(0,0,0,.06)}
+  .login-wrap h1{font-size:20px;margin:0 0 4px;color:var(--pri)}
+  .login-wrap p{font-size:13px;color:#5a6b67;margin:0 0 16px}
+  .msg{font-size:13px;padding:9px 12px;border-radius:8px;margin:10px 0}
+  .msg.err{background:#fbe7e4;color:var(--danger)}
+  .msg.ok{background:#e3f7ec;color:var(--ok)}
+  .msg.warn{background:#fdf0e0;color:#8a5a12}
+  .flex{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .flex>div{flex:1;min-width:150px}
+  .temp-ok{color:var(--ok);font-weight:600}
+  .temp-bad{color:var(--danger);font-weight:600}
+  .hero{background:linear-gradient(135deg,#0b6e4f,#0e8f66);color:#fff;border-radius:12px;padding:18px;margin-bottom:16px}
+  .hero h2{margin:0 0 4px}
+  .hero p{margin:0;font-size:13px;opacity:.9}
+  .quiz-q{background:#f7faf9;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+  .quiz-q p{margin:0 0 8px;font-weight:600;font-size:14px}
+  .quiz-q label{font-weight:400;display:block;margin:4px 0;font-size:13px}
+  iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#000}
+  .policy{background:#f7faf9;border:1px solid var(--line);border-radius:10px;padding:16px;max-height:340px;overflow:auto;font-size:13.5px;line-height:1.6}
+  .tag{font-size:11px;background:#eef4f1;padding:2px 8px;border-radius:20px;color:#455}
+  .toast{position:fixed;bottom:20px;right:20px;background:#1c2b28;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;opacity:0;transform:translateY(10px);transition:.3s;z-index:99}
+  .toast.show{opacity:1;transform:none}
+  @media(max-width:760px){nav{width:100%;display:flex;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line)}.layout{flex-direction:column}nav a{flex:1;text-align:center;margin:2px}}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginView">
+  <div class="login-wrap">
+    <h1>🏥 HK Clinic Operations</h1>
+    <p>Aligned with Code of Practice for Clinics (Cap. 633)</p>
+    <label>Username</label>
+    <input id="loginUser" placeholder="e.g. admin">
+    <label>Password</label>
+    <input id="loginPass" type="password" placeholder="Password">
+    <div id="loginMsg" class="msg hide"></div>
+    <button style="width:100%;margin-top:14px" onclick="doLogin()">Sign in</button>
+    <p style="margin-top:14px;font-size:12px;color:#778">Demo admin → <b>admin / Admin@123</b></p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appView" class="hide">
+  <header>
+    <h1>🏥 HK Clinic Operations <span class="tag" style="margin-left:8px">Cap. 633</span></h1>
+    <div class="userbox">
+      <span id="whoAmI"></span>
+      <button class="ghost small" onclick="forcePasswordChange()">Change Password</button>
+      <button class="danger small" onclick="logout()">Logout</button>
+    </div>
+  </header>
+  <div class="layout">
+    <nav id="nav"></nav>
+    <main id="main"></main>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* =========================================================
+   DATA LAYER (localStorage)
+   ========================================================= */
+const DB_KEY = 'hkclinic_db_v1';
+const CLINICS = ['TST','Central','TW','ST'];
+const ROLES = ['Healthcare Assistant','Nurse','Manager','Administration','CME','Clinic Staff'];
+
+function seed(){
+  return {
+    users:[
+      {id:1, username:'admin', name:'System Admin', password:'Admin@123', role:'Administration',
+       clinics:CLINICS, mustChange:false, policiesAcknowledged:true, trainingDone:{},
+       active:true, tempPassword:null}
+    ],
+    fridgeLogs:[],       // {id, clinic, date, time, min, max, user, remark}
+    stockChecks:[],      // {id, clinic, month, item, qty, expiry, status, user, remark}
+    policies:[
+      {id:'P1', title:'Infection Control & Hygiene (Cap. 633)',
+       body:`This clinic operates in accordance with the Code of Practice for Clinics registered under the Medical Clinics Ordinance (Cap. 633) of Hong Kong.\n\n1. Hand hygiene must be performed before and after every patient contact.\n2. All clinical waste must be segregated and disposed of per the Waste Disposal Ordinance.\n3. Cold-chain items must be stored between 2°C and 8°C; temperatures must be charted at least daily.\n4. Sharps must be disposed of in approved sharps containers immediately after use.\n5. Staff with infective symptoms must not attend work.\n6. All staff must complete annual infection control refresher training.\n\nBy entering your password below you confirm you have read, understood and will comply with this policy.`},
+      {id:'P2', title:'Medication & Consumable Stock Management',
+       body:`1. All consumables must be checked monthly for quantity and expiry.\n2. Any item expiring within 90 days must be flagged to the Manager.\n3. Expired items must be quarantined and disposed of per clinic waste protocol.\n4. Fridge-stored medicines must never be stored outside 2°C–8°C.\n5. All temperature excursions must be recorded with corrective action.\n\nPassword acknowledgement confirms your understanding.`},
+      {id:'P3', title:'Patient Privacy & Data Handling',
+       body:`1. Patient data is handled per the Personal Data (Privacy) Ordinance (Cap. 486).\n2. No patient information may leave the clinic premises without authorisation.\n3. Screens must be locked when unattended.\n4. Only authorised users may access patient records.\n\nPassword acknowledgement confirms your understanding.`}
+    ],
+    trainings:[
+      {id:'T1', title:'Fridge Temperature Monitoring & Cold Chain',
+       video:'https://www.youtube.com/embed/1HpV9p1qU_k',
+       desc:'Understand cold-chain requirements, 2–8°C range, and how to chart fridge temperature under Cap. 633.',
+       quiz:[
+         {q:'What is the acceptable fridge temperature range for vaccines/medicines?', opts:['0°C – 4°C','2°C – 8°C','4°C – 12°C','−2°C – 2°C'], ans:1},
+         {q:'How often should fridge temperature be charted?', opts:['Weekly','Monthly','At least daily','Annually'], ans:2},
+         {q:'What should you do if the fridge temperature is 10°C?', opts:['Ignore it','Record it and notify the Manager immediately','Open the fridge to cool it','Nothing'], ans:1}
+       ]},
+      {id:'T2', title:'Infection Control & Hand Hygiene',
+       video:'https://www.youtube.com/embed/3PmVJQUCm4E',
+       desc:'Essential infection control practices required under Cap. 633.',
+       quiz:[
+         {q:'When must hand hygiene be performed?', opts:['Only before procedures','Before and after every patient contact','Once per shift','Only after gloves'], ans:1},
+         {q:'Sharps must be disposed of…', opts:['In general waste','In approved sharps containers immediately after use','At end of shift','In a plastic bag'], ans:1},
+         {q:'Which is NOT an infection control requirement?', opts:['Annual refresher training','Segregating clinical waste','Sharing patient files publicly','Staying home when infective'], ans:2}
+       ]}
+    ],
+    clinics:CLINICS
+  };
+}
+
+let DB = load();
+function load(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  const s = seed(); localStorage.setItem(DB_KEY, JSON.stringify(s)); return s;
+}
+function save(){ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }
+
+/* =========================================================
+   SESSION
+   ========================================================= */
+let CURRENT = null;
+
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const msg = document.getElementById('loginMsg');
+  const user = DB.users.find(x=>x.username===u && x.active);
+  if(!user || user.password!==p){
+    msg.className='msg err'; msg.textContent='Invalid username or password.'; msg.classList.remove('hide'); return;
+  }
+  msg.classList.add('hide');
+  CURRENT = user;
+  document.getElementById('loginView').classList.add('hide');
+  document.getElementById('appView').classList.remove('hide');
+  document.getElementById('whoAmI').textContent = `${user.name} (${user.role})`;
+  if(user.mustChange){ renderForcePassword(); return; }
+  renderNav(); navigate('dashboard');
+}
+
+function logout(){ CURRENT=null; document.getElementById('appView').classList.add('hide'); document.getElementById('loginView').classList.remove('hide'); document.getElementById('loginPass').value=''; }
+
+function persistCurrent(){ if(CURRENT){ const i=DB.users.findIndex(x=>x.id===CURRENT.id); DB.users[i]=CURRENT; save(); } }
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+const can = (role, page) => {
+  const isMgr = role==='Manager'||role==='Administration';
+  if(page==='users') return isMgr;
+  if(page==='dashboard'||page==='fridge'||page==='stock'||page==='policy'||page==='training') return true;
+  if(page==='reports') return isMgr;
+  return false;
+};
+
+function renderNav(){
+  const pages = [
+    ['dashboard','📊 Dashboard'],['fridge','🌡️ Fridge Temperature'],['stock','📦 Stock & Expiry'],
+    ['policy','📜 Policies'],['training','🎓 Training Portal'],
+    ['users','👥 User Management'],['reports','📈 Reports']
+  ];
+  document.getElementById('nav').innerHTML = pages
+    .filter(p=>can(CURRENT.role,p[0]))
+    .map(p=>`<a data-page="${p[0]}" onclick="navigate('${p[0]}')">${p[1]}</a>`).join('');
+}
+
+function navigate(page){
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active', a.dataset.page===page));
+  const m = document.getElementById('main');
+  if(page==='dashboard') return viewDashboard(m);
+  if(page==='fridge') return viewFridge(m);
+  if(page==='stock') return viewStock(m);
+  if(page==='policy') return viewPolicy(m);
+  if(page==='training') return viewTraining(m);
+  if(page==='users') return viewUsers(m);
+  if(page==='reports') return viewReports(m);
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+function viewDashboard(m){
+  const pendingPolicy = DB.policies.filter(p=>!CURRENT.policiesAcknowledged?.[p.id]).length;
+  const pendingTrain = DB.trainings.filter(t=>!CURRENT.trainingDone?.[t.id]).length;
+  const today = new Date().toISOString().slice(0,10);
+  const myClinics = CURRENT.clinics.length?CURRENT.clinics:[];
+  const todaysTemps = DB.fridgeLogs.filter(l=>l.date===today && myClinics.includes(l.clinic));
+  const alerts = todaysTemps.filter(l=>l.min<2||l.max>8);
+
+  m.innerHTML = `
+    <div class="hero">
+      <h2>Welcome, ${CURRENT.name}</h2>
+      <p>Role: ${CURRENT.role} • Clinics: ${myClinics.join(', ')||'All'} • Compliance: Cap. 633</p>
+    </div>
+    <div class="grid">
+      <div class="card"><h2>Today's Fridge Logs</h2><p style="font-size:32px;margin:0;color:var(--pri)">${todaysTemps.length}</p><small>of ${myClinics.length} clinics</small></div>
+      <div class="card"><h2>Temperature Alerts</h2><p style="font-size:32px;margin:0;color:${alerts.length?'var(--danger)':'var(--ok)'}">${alerts.length}</p><small>out-of-range readings today</small></div>
+      <div class="card"><h2>Policies to Acknowledge</h2><p style="font-size:32px;margin:0;color:${pendingPolicy?'var(--warn)':'var(--ok)'}">${pendingPolicy}</p><small>${DB.policies.length} total</small></div>
+      <div class="card"><h2>Training Modules</h2><p style="font-size:32px;margin:0;color:${pendingTrain?'var(--warn)':'var(--ok)'}">${pendingTrain}</p><small>pending completion</small></div>
+    </div>
+    <div class="card">
+      <h2>Recent Activity</h2>
+      <table><tr><th>Date</th><th>Clinic</th><th>Type</th><th>Detail</th><th>User</th></tr>
+      ${[...DB.fridgeLogs.map(l=>({date:l.date,clinic:l.clinic,type:'Fridge',detail:`${l.min}°C – ${l.max}°C ${l.min<2||l.max>8?'⚠️':''}`,user:l.user})),
+        ...DB.stockChecks.map(s=>({date:s.month,clinic:s.clinic,type:'Stock',detail:`${s.item} exp ${s.expiry} (${s.status})`,user:s.user}))]
+        .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10)
+        .map(r=>`<tr><td>${r.date}</td><td>${r.clinic}</td><td>${r.type}</td><td>${r.detail}</td><td>${r.user}</td></tr>`).join('') || '<tr><td colspan="5">No records yet.</td></tr>'}
+      </table>
+    </div>`;
+}
+
+/* =========================================================
+   FRIDGE TEMPERATURE
+   ========================================================= */
+function viewFridge(m){
+  const today = new Date().toISOString().slice(0,10);
+  m.innerHTML = `
+    <div class="card">
+      <h2>🌡️ Record Fridge Temperature</h2>
+      <p style="font-size:13px;color:#5a6b67;margin:0 0 10px">Acceptable range: <b>2°C – 8°C</b>. Chart at least once daily (Cap. 633).</p>
+      <div class="flex">
+        <div><label>Clinic</label><select id="fClinic">${CLINICS.map(c=>`<option ${CURRENT.clinics.includes(c)?'':''}>${c}</option>`).join('')}</select></div>
+        <div><label>Date</label><input type="date" id="fDate" value="${today}"></div>
+        <div><label>Time</label><input type="time" id="fTime" value="${new Date().toTimeString().slice(0,5)}"></div>
+        <div><label>Min °C</label><input type="number" step="0.1" id="fMin" placeholder="e.g. 3.5"></div>
+        <div><label>Max °C</label><input type="number" step="0.1" id="fMax" placeholder="e.g. 7.0"></div>
+      </div>
+      <label>Remark / Corrective action</label>
+      <input id="fRemark" placeholder="Optional">
+      <button style="margin-top:12px" onclick="saveFridge()">Save Record</button>
+    </div>
+    <div class="card">
+      <h2>📋 Fridge Log (recent)</h2>
+      <table><tr><th>Date</th><th>Time</th><th>Clinic</th><th>Min</th><th>Max</th><th>Status</th><th>By</th><th>Remark</th></tr>
+      ${DB.fridgeLogs.slice().reverse().slice(0,40).map(l=>{
+        const bad = l.min<2||l.max>8;
+        return `<tr><td>${l.date}</td><td>${l.time}</td><td>${l.clinic}</td><td>${l.min}</td><td>${l.max}</td>
+          <td><span class="pill ${bad?'bad':'ok'}">${bad?'OUT OF RANGE':'OK'}</span></td><td>${l.user}</td><td>${l.remark||'-'}</td></tr>`;
+      }).join('') || '<tr><td colspan="8">No records.</td></tr>'}
+      </table>
+    </div>`;
+}
+
+function saveFridge(){
+  const c=document.getElementById('fClinic').value, d=document.getElementById('fDate').value,
+        t=document.getElementById('fTime').value, mn=parseFloat(document.getElementById('fMin').value),
+        mx=parseFloat(document.getElementById('fMax').value), rm=document.getElementById('fRemark').value;
+  if(isNaN(mn)||isNaN(mx)) return toast('Enter min and max temperatures.');
+  DB.fridgeLogs.push({id:Date.now(), clinic:c, date:d, time:t, min:mn, max:mx, user:CURRENT.name, remark:rm});
+  save(); toast('Fridge temperature recorded.'); navigate('fridge');
+}
+
+/* =========================================================
+   STOCK & EXPIRY
+   ========================================================= */
+function viewStock(m){
+  const month = new Date().toISOString().slice(0,7);
+  m.innerHTML = `
+    <div class="card">
+      <h2>📦 Monthly Consumable Stock Check</h2>
+      <div class="flex">
+        <div><label>Clinic</label><select id="sClinic">${CLINICS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+        <div><label>Month</label><input type="month" id="sMonth" value="${month}"></div>
+        <div><label>Item</label><input id="sItem" placeholder="e.g. Surgical gloves (M)"></div>
+        <div><label>Qty</label><input type="number" id="sQty" placeholder="e.g. 200"></div>
+        <div><label>Expiry</label><input type="date" id="sExpiry"></div>
+      </div>
+      <label>Status</label>
+      <select id="sStatus"><option>In Stock</option><option>Low Stock</option><option>Expiring Soon</option><option>Expired</option></select>
+      <label>Remark</label><input id="sRemark" placeholder="Optional">
+      <button style="margin-top:12px" onclick="saveStock()">Save Check</button>
+    </div>
+    <div class="card">
+      <h2>📋 Stock Check Records</h2>
+      <table><tr><th>Month</th><th>Clinic</th><th>Item</th><th>Qty</th><th>Expiry</th><th>Status</th><th>By</th></tr>
+      ${DB.stockChecks.slice().reverse().slice(0,40).map(s=>{
+        let cls='ok'; if(s.status==='Expired') cls='bad'; else if(s.status!=='In Stock') cls='warn';
+        return `<tr><td>${s.month}</td><td>${s.clinic}</td><td>${s.item}</td><td>${s.qty}</td><td>${s.expiry}</td>
+          <td><span class="pill ${cls}">${s.status}</span></td><td>${s.user}</td></tr>`;
+      }).join('') || '<tr><td colspan="7">No records.</td></tr>'}
+      </table>
+    </div>`;
+}
+function saveStock(){
+  const c=document.getElementById('sClinic').value, mo=document.getElementById('sMonth').value,
+        it=document.getElementById('sItem').value, q=document.getElementById('sQty').value,
+        ex=document.getElementById('sExpiry').value, st=document.getElementById('sStatus').value,
+        rm=document.getElementById('sRemark').value;
+  if(!it) return toast('Enter item name.');
+  DB.stockChecks.push({id:Date.now(), clinic:c, month:mo, item:it, qty:q, expiry:ex, status:st, user:CURRENT.name, remark:rm});
+  save(); toast('Stock check saved.'); navigate('stock');
+}
+
+/* =========================================================
+   POLICIES
+   ========================================================= */
+function viewPolicy(m){
+  m.innerHTML = `<div class="hero"><h2>📜 Policy Review & Acknowledgement</h2><p>All staff must read and acknowledge each policy with their password (Cap. 633 compliance).</p></div>`;
+  DB.policies.forEach(p=>{
+    const ack = CURRENT.policiesAcknowledged?.[p.id];
+    m.innerHTML += `
+      <div class="card">
+        <h2>${p.title} ${ack?'<span class="pill ok">ACKNOWLEDGED</span>':'<span class="pill warn">PENDING</span>'}</h2>
+        <div class="policy">${p.body.replace(/\n/g,'<br>')}</div>
+        ${ack?'<p class="msg ok" style="margin-top:10px">✔ You acknowledged this policy.</p>':`
+        <div class="flex" style="margin-top:12px">
+          <div><label>Re-enter your password to acknowledge</label>
+          <input type="password" id="ack_${p.id}" placeholder="Password"></div>
+          <div style="flex:0"><button onclick="ackPolicy('${p.id}')">Acknowledge & Sign</button></div>
+        </div>`}
+      </div>`;
+  });
+}
+function ackPolicy(id){
+  const pw = document.getElementById('ack_'+id).value;
+  if(pw!==CURRENT.password) return toast('Incorrect password. Acknowledgement denied.');
+  CURRENT.policiesAcknowledged = CURRENT.policiesAcknowledged||{};
+  CURRENT.policiesAcknowledged[id] = new Date().toISOString();
+  persistCurrent(); toast('Policy acknowledged.'); navigate('policy');
+}
+
+/* =========================================================
+   TRAINING PORTAL
+   ========================================================= */
+function viewTraining(m){
+  m.innerHTML = `<div class="hero"><h2>🎓 Training Portal</h2><p>Watch the video, then pass the quiz (≥ 2/3) to record completion.</p></div>`;
+  DB.trainings.forEach(t=>{
+    const done = CURRENT.trainingDone?.[t.id];
+    m.innerHTML += `
+      <div class="card">
+        <h2>${t.title} ${done?'<span class="pill ok">COMPLETED</span>':'<span class="pill warn">PENDING</span>'}</h2>
+        <p style="font-size:13px;color:#5a6b67">${t.desc}</p>
+        <iframe src="${t.video}" allowfullscreen></iframe>
+        <div class="quiz-q" id="quiz_${t.id}" style="margin-top:14px">
+          <p>Quick quiz</p>
+          ${t.quiz.map((q,qi)=>`<div style="margin-bottom:10px">
+            <p style="font-weight:600;font-size:13px">${qi+1}. ${q.q}</p>
+            ${q.opts.map((o,oi)=>`<label><input type="radio" name="${t.id}_${qi}" value="${oi}" style="width:auto;margin-right:6px">${o}</label>`).join('')}
+          </div>`).join('')}
+          <button onclick="submitQuiz('${t.id}')">Submit Quiz</button>
+        </div>
+      </div>`;
+  });
+}
+function submitQuiz(id){
+  const t = DB.trainings.find(x=>x.id===id);
+  let correct = 0;
+  t.quiz.forEach((q,qi)=>{
+    const sel = document.querySelector(`input[name="${id}_${qi}"]:checked`);
+    if(sel && parseInt(sel.value)===q.ans) correct++;
+  });
+  if(correct >= 2){
+    CURRENT.trainingDone = CURRENT.trainingDone||{};
+    CURRENT.trainingDone[id] = new Date().toISOString();
+    persistCurrent(); toast(`Passed! Score ${correct}/${t.quiz.length}. Training recorded.`); navigate('training');
+  } else {
+    toast(`Score ${correct}/${t.quiz.length} — need at least 2 to pass. Please retry.`);
+  }
+}
+
+/* =========================================================
+   USER MANAGEMENT (Manager / Administration only)
+   ========================================================= */
+function viewUsers(m){
+  m.innerHTML = `
+    <div class="hero"><h2>👥 User Management</h2><p>Create accounts, assign roles and clinic access. A temporary password is generated and shown — send it to the user; they must change it on first login.</p></div>
+    <div class="card">
+      <h2>Create New User</h2>
+      <div class="flex">
+        <div><label>Full Name</label><input id="uName" placeholder="e.g. Chan Tai Man"></div>
+        <div><label>Username</label><input id="uUser" placeholder="e.g. ctm01"></div>
+        <div><label>Role</label><select id="uRole">${ROLES.map(r=>`<option>${r}</option>`).join('')}</select></div>
+      </div>
+      <label>Clinic Access</label>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin:6px 0">
+        ${CLINICS.map(c=>`<label style="font-weight:400"><input type="checkbox" value="${c}" class="uClinic" style="width:auto;margin-right:4px">${c}</label>`).join('')}
+      </div>
+      <button onclick="createUser()">Create Account & Generate Password</button>
+      <div id="newUserOut"></div>
+    </div>
+    <div class="card">
+      <h2>All Users</h2>
+      <table><tr><th>Name</th><th>Username</th><th>Role</th><th>Clinics</th><th>Status</th><th>Actions</th></tr>
+      ${DB.users.map(u=>`<tr>
+        <td>${u.name}</td><td>${u.username}</td>
+        <td><select onchange="changeRole(${u.id},this.value)" ${u.username==='admin'?'disabled':''}>
+          ${ROLES.map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></td>
+        <td>${u.clinics.join(', ')}</td>
+        <td>${u.active?'<span class="pill ok">Active</span>':'<span class="pill bad">Disabled</span>'}</td>
+        <td>
+          <button class="small" onclick="resetPw(${u.id})">Reset PW</button>
+          <button class="small danger" onclick="toggleActive(${u.id})">${u.active?'Disable':'Enable'}</button>
+        </td></tr>`).join('')}
+      </table>
+    </div>`;
+}
+function genPassword(){
+  const chars='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+  let p=''; for(let i=0;i<10;i++) p+=chars[Math.floor(Math.random()*chars.length)];
+  return p;
+}
+function createUser(){
+  const name=document.getElementById('uName').value.trim();
+  const user=document.getElementById('uUser').value.trim();
+  const role=document.getElementById('uRole').value;
+  const clinics=[...document.querySelectorAll('.uClinic:checked')].map(c=>c.value);
+  if(!name||!user) return toast('Enter name and username.');
+  if(DB.users.some(u=>u.username===user)) return toast('Username already exists.');
+  if(!clinics.length) return toast('Select at least one clinic.');
+  const pw = genPassword();
+  const newU = {id:Date.now(), username:user, name, password:pw, role, clinics, mustChange:true,
+    policiesAcknowledged:{}, trainingDone:{}, active:true, tempPassword:pw};
+  DB.users.push(newU); save();
+  document.getElementById('newUserOut').innerHTML = `
+    <div class="msg ok">
+      ✅ Account created for <b>${name}</b>.<br>
+     
